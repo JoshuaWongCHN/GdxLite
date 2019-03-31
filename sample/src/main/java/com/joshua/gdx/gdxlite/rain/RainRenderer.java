@@ -42,18 +42,18 @@ public class RainRenderer implements GLSurfaceView.Renderer {
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         GLES20.glClearColor(1f, 1f, 1f, 1f);
 
-        mBgProgram = new ShaderProgram(mContext, "rain/bg.vert", "rain/bg.frag");
+        mBgProgram = new ShaderProgram("rain/bg.vert", "rain/bg.frag");
         Log.d(TAG, "onSurfaceCreated: " + mBgProgram.getLog());
         mVertex = new BgVertexArray();
 
-        mRainProgram = new ShaderProgram(mContext, "rain/rain.vert", "rain/rain.frag");
+        mRainProgram = new ShaderProgram("rain/rain.vert", "rain/rain.frag");
         Log.d(TAG, "onSurfaceCreated: " + mRainProgram.getLog());
         mParticlesSystem = new RainParticlesSystem(4000);
         GLError.checkError();
 
         mTextureBinder = new DefaultTextureBinder(DefaultTextureBinder.WEIGHTED, 1);
-        mTextureBg = new Texture(mContext, "rain/bg_first_heavyrain.png");
-        mTexture0 = new Texture(mContext, "rain/particle-ball1.png");
+        mTextureBg = new Texture("rain/bg_first_heavyrain.png");
+        mTexture0 = new Texture("rain/particle-ball1.png");
     }
 
     @Override

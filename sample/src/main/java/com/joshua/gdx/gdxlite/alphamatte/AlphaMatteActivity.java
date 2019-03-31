@@ -6,7 +6,7 @@ import android.support.v7.app.AppCompatActivity;
 
 import com.joshua.gdx.gdxlite.R;
 
-public class DemoActivity extends AppCompatActivity {
+public class AlphaMatteActivity extends AppCompatActivity {
 
     private GLSurfaceView mGLSurfaceView;
 

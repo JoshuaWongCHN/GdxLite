@@ -9,7 +9,9 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-import com.joshua.gdx.gdxlite.alphamatte.DemoActivity;
+import com.joshua.gdx.gdxlite.alphamatte.AlphaMatteActivity;
+import com.joshua.gdx.gdxlite.delete.DeleteActivity;
+import com.joshua.gdx.gdxlite.rain.RainActivity;
 
 import java.util.ArrayList;
 
@@ -38,7 +40,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initData() {
-        mData.add("删除");
-        mActivities.add(DemoActivity.class);
+        mData.add("alpha遮罩");
+        mActivities.add(AlphaMatteActivity.class);
+        mData.add("天气");
+        mActivities.add(RainActivity.class);
+        mData.add("图标删除");
+        mActivities.add(DeleteActivity.class);
     }
 }

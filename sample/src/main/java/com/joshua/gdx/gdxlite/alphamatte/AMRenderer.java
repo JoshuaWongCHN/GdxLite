@@ -42,14 +42,14 @@ public class AMRenderer implements GLSurfaceView.Renderer {
         GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
         GLES20.glClearColor(0f, 0f, 0f, 0f);
 
-        mTextureProgram = new ShaderProgram("am/alphamatte.vert", "am/alphamatte.frag");
+        mTextureProgram = new ShaderProgram("alphamatte/alphamatte.vert", "alphamatte/alphamatte.frag");
         Logger.getLogger("joshua").info(mTextureProgram.getLog());
         long time = System.currentTimeMillis();
         Logger.getLogger("joshua").info("time:" + (time - System.currentTimeMillis()));
 
         mTextureBinder = new DefaultTextureBinder(DefaultTextureBinder.WEIGHTED, 1);
-        mTextureText = new Texture("am/text.png");
-        mTextureMask = new Texture("am/mask_glass.png");
+        mTextureText = new Texture("alphamatte/text.png");
+        mTextureMask = new Texture("alphamatte/mask.png");
         mTextureMask.setWrap(Texture.TextureWrap.MirroredRepeat, Texture.TextureWrap.MirroredRepeat);
     }
 

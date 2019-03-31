@@ -37,14 +37,14 @@ public class DeleteRenderer implements GLSurfaceView.Renderer {
         GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
         GLES20.glClearColor(1f, 1f, 1f, 1f);
 
-        mProgram = new ShaderProgram(mContext, "delete/delete.vert", "delete/delete.frag");
+        mProgram = new ShaderProgram("delete/delete.vert", "delete/delete.frag");
         Logger.getLogger("joshua").info(mProgram.getLog());
 
         long time = System.currentTimeMillis();
         Logger.getLogger("joshua").info("time:" + (time - System.currentTimeMillis()));
 
         mTextureBinder = new DefaultTextureBinder(DefaultTextureBinder.WEIGHTED, 1);
-        mTexture0 = new Texture(mContext, "delete/weather.png");
+        mTexture0 = new Texture("delete/weather.png");
     }
 
     @Override
