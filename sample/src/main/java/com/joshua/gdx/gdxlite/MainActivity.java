@@ -9,8 +9,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-import com.joshua.gdx.gdxlite.delete.DeleteActivity;
-import com.joshua.gdx.gdxlite.rain.RainActivity;
+import com.joshua.gdx.gdxlite.alphamatte.DemoActivity;
 
 import java.util.ArrayList;
 
@@ -39,10 +38,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initData() {
-        mData.add("下雨");
-        mActivities.add(RainActivity.class);
-
         mData.add("删除");
-        mActivities.add(DeleteActivity.class);
+        mActivities.add(DemoActivity.class);
     }
 }
