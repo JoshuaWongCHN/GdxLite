@@ -207,9 +207,8 @@ public class ShaderProgram implements Disposable {
      **/
     private int refCount = 0;
 
-    public ShaderProgram(Context context, String internalVertexPath, String internalFragmentPath) {
-        this(FileUtil.readFileFromAssets(context, internalVertexPath), FileUtil.readFileFromAssets(context,
-                internalFragmentPath));
+    public ShaderProgram(Context context, String vertex, String fragment) {
+        this(FileUtil.internalText(vertex), FileUtil.internalText(fragment));
     }
 
     /**

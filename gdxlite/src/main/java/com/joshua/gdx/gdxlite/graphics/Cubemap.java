@@ -116,12 +116,12 @@ public class Cubemap extends GLTexture {
      */
     public Cubemap(Context context, String positiveX, String negativeX, String positiveY, String negativeY, String
             positiveZ, String negativeZ) {
-        this(FileUtil.loadBitmapFromAssets(context, positiveX),
-                FileUtil.loadBitmapFromAssets(context, negativeX),
-                FileUtil.loadBitmapFromAssets(context, positiveY),
-                FileUtil.loadBitmapFromAssets(context, negativeY),
-                FileUtil.loadBitmapFromAssets(context, positiveZ),
-                FileUtil.loadBitmapFromAssets(context, negativeZ));
+        this(FileUtil.internalBitmap(positiveX),
+                FileUtil.internalBitmap( negativeX),
+                FileUtil.internalBitmap( positiveY),
+                FileUtil.internalBitmap( negativeY),
+                FileUtil.internalBitmap( positiveZ),
+                FileUtil.internalBitmap( negativeZ));
     }
 
     public Cubemap(Bitmap positiveX, Bitmap negativeX, Bitmap positiveY, Bitmap negativeY,

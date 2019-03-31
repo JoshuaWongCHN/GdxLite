@@ -16,15 +16,16 @@
 
 package com.joshua.gdx.gdxlite.graphics;
 
-
 import android.graphics.Bitmap;
 import android.opengl.GLES20;
 import android.opengl.GLUtils;
 
 import com.joshua.gdx.gdxlite.graphics.Texture.TextureFilter;
 import com.joshua.gdx.gdxlite.graphics.Texture.TextureWrap;
+import com.joshua.gdx.gdxlite.graphics.TextureData.TextureDataType;
 import com.joshua.gdx.gdxlite.graphics.glutils.GLTool;
 import com.joshua.gdx.gdxlite.utils.Disposable;
+
 
 /**
  * Class representing an OpenGL texture by its target and handle. Keeps track of its state like the TextureFilter and
@@ -228,21 +229,32 @@ public abstract class GLTexture implements Disposable {
         delete();
     }
 
-    protected static void uploadImageData(int target, Bitmap bitmap) {
-        uploadImageData(target, bitmap, 0, true);
+    protected static void uploadImageData(int target, TextureData data) {
+        uploadImageData(target, data, 0);
     }
 
-    public static void uploadImageData(int target, Bitmap bitmap, int miplevel, boolean useMipmap) {
-        if (bitmap == null) {
+    public static void uploadImageData(int target, TextureData data, int miplevel) {
+        if (data == null) {
+            // FIXME: remove texture on target?
             return;
         }
-        GLES20.glPixelStorei(GLES20.GL_UNPACK_ALIGNMENT, 1);
 
-        GLUtils.texImage2D(target, miplevel, bitmap, 0);
-        if (useMipmap) {
-            GLES20.glGenerateMipmap(GLES20.GL_TEXTURE_2D);
-        }else{
-            GLUtils.texImage2D(target, miplevel, bitmap, 0);
+        if (!data.isPrepared()) data.prepare();
+
+        final TextureDataType type = data.getType();
+        if (type == TextureDataType.Custom) {
+            data.consumeCustomData(target);
+            return;
         }
+
+        Bitmap bitmap = data.consumeBitmap();
+        boolean disposeBitmap = data.disposeBitmap();
+
+        GLES20.glPixelStorei(GLES20.GL_UNPACK_ALIGNMENT, 1);
+        GLUtils.texImage2D(target, miplevel, bitmap, 0);
+        if (data.useMipMaps()) {
+            GLES20.glGenerateMipmap(GLES20.GL_TEXTURE_2D);
+        }
+        if (disposeBitmap) bitmap.recycle();
     }
 }

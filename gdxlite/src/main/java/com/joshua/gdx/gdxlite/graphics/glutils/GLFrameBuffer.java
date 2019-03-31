@@ -16,16 +16,13 @@
 
 package com.joshua.gdx.gdxlite.graphics.glutils;
 
-import android.graphics.Bitmap;
 import android.opengl.GLES20;
 import android.opengl.GLES30;
 
+import com.joshua.gdx.gdxlite.graphics.Format;
 import com.joshua.gdx.gdxlite.graphics.GLTexture;
 import com.joshua.gdx.gdxlite.utils.Array;
-import com.joshua.gdx.gdxlite.utils.BufferUtils;
 import com.joshua.gdx.gdxlite.utils.Disposable;
-
-import java.nio.IntBuffer;
 
 /**
  * <p>
@@ -203,12 +200,11 @@ public abstract class GLFrameBuffer<T extends GLTexture> implements Disposable {
         }
 
         if (isMRT) {
-            IntBuffer buffer = BufferUtils.newIntBuffer(colorTextureCounter);
+            int[] bufs = new int[colorTextureCounter];
             for (int i = 0; i < colorTextureCounter; i++) {
-                buffer.put(GLES20.GL_COLOR_ATTACHMENT0 + i);
+                bufs[i] = GLES20.GL_COLOR_ATTACHMENT0 + i;
             }
-            buffer.position(0);
-            GLES30.glDrawBuffers(colorTextureCounter, buffer);
+            GLES30.glDrawBuffers(colorTextureCounter, bufs, 0);
         } else {
             attachFrameBufferColorTexture(textureAttachments.first());
         }
@@ -436,8 +432,8 @@ public abstract class GLFrameBuffer<T extends GLTexture> implements Disposable {
         boolean isDepth;
         boolean isStencil;
 
-        public FrameBufferTextureAttachmentSpec(int internalformat, int format, int type) {
-            this.internalFormat = internalformat;
+        public FrameBufferTextureAttachmentSpec(int internalFormat, int format, int type) {
+            this.internalFormat = internalFormat;
             this.format = format;
             this.type = type;
         }
@@ -478,42 +474,10 @@ public abstract class GLFrameBuffer<T extends GLTexture> implements Disposable {
             return this;
         }
 
-        public GLFrameBufferBuilder<U> addBasicColorTextureAttachment (Bitmap.Config config) {
-            int glFormat = BitmapConfigToGlFormat(config);
-            int glType = BitmapConfigToGlType(config);
+        public GLFrameBufferBuilder<U> addBasicColorTextureAttachment(Format format) {
+            int glFormat = format.toGlFormat();
+            int glType = format.toGlType();
             return addColorTextureAttachment(glFormat, glFormat, glType);
-        }
-
-        private int BitmapConfigToGlFormat(Bitmap.Config config){
-            switch (config) {
-                case ALPHA_8:
-                    return GLES20.GL_ALPHA;
-//                case GDX2D_FORMAT_LUMINANCE_ALPHA:
-//                    return GL20.GL_LUMINANCE_ALPHA;
-//                case GDX2D_FORMAT_RGB888:
-                case RGB_565:
-                    return GLES20.GL_RGB;
-                case ARGB_8888:
-                case ARGB_4444:
-                    return GLES20.GL_RGBA;
-                default:
-                    throw new RuntimeException("unknown format: " + config);
-            }
-        }
-        private int BitmapConfigToGlType(Bitmap.Config config){
-            switch (config) {
-                case ALPHA_8:
-//                case GDX2D_FORMAT_LUMINANCE_ALPHA:
-//                case GDX2D_FORMAT_RGB888:
-                case ARGB_8888:
-                    return GLES20.GL_UNSIGNED_BYTE;
-                case RGB_565:
-                    return GLES20.GL_UNSIGNED_SHORT_5_6_5;
-                case ARGB_4444:
-                    return GLES20.GL_UNSIGNED_SHORT_4_4_4_4;
-                default:
-                    throw new RuntimeException("unknown format: " + config);
-            }
         }
 
         public GLFrameBufferBuilder<U> addFloatAttachment(int internalFormat, int format, int type, boolean gpuOnly) {

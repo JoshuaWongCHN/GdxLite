@@ -1,6 +1,5 @@
 package com.joshua.gdx.gdxlite.utils;
 
-import android.content.Context;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -34,6 +33,32 @@ import java.util.List;
  */
 public class FileUtil {
     private static final String TAG = "FileUtil";
+    private static AssetManager mAssets;
+
+    public static void init(AssetManager assets) {
+        mAssets = assets;
+    }
+
+    public static InputStream internal(String path) {
+        if (mAssets == null) {
+            throw new RuntimeException("FileUtil have not init.");
+        }
+        try {
+            return mAssets.open(path);
+        } catch (IOException e) {
+            throw new RuntimeException("Error reading internal file: " + e);
+        }
+    }
+
+    public static InputStream external(String filename) {
+        try {
+            File file = new File(Environment.getExternalStorageDirectory(), filename);
+            return new FileInputStream(file);
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException("Error reading external file: " + e);
+        }
+    }
+
 
     /**
      * 从assets文件夹读取文件
@@ -41,30 +66,30 @@ public class FileUtil {
      * @param filename
      * @return
      */
-    public static String readFileFromAssets(Context context, String filename) {
+    public static String internalText(String filename) {
         StringBuilder body = new StringBuilder();
         try {
-            InputStream inputStream = context.getAssets().open(filename);
-            InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+            InputStream is = internal(filename);
+            InputStreamReader inputStreamReader = new InputStreamReader(is);
             BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
             String nextLine;
             while ((nextLine = bufferedReader.readLine()) != null) {
                 body.append(nextLine);
                 body.append("\n");
             }
+            is.close();
         } catch (IOException e) {
-            Log.e(TAG, "readFileFromAssets: ", e);
+            Log.e(TAG, "internal: ", e);
         } catch (Resources.NotFoundException e) {
             throw new RuntimeException("Asset not found: " + filename, e);
         }
         return body.toString();
     }
 
-    public static Bitmap loadBitmapFromAssets(Context context, String fileName) {
+    public static Bitmap internalBitmap(String filename) {
         Bitmap bitmap = null;
-        AssetManager am = context.getResources().getAssets();
         try {
-            InputStream is = am.open(fileName);
+            InputStream is = internal(filename);
             final BitmapFactory.Options options = new BitmapFactory.Options();
             //取图片的原始数据，非缩放版本
             options.inScaled = false;
@@ -83,7 +108,7 @@ public class FileUtil {
      * @param filename
      * @return
      */
-    public static String readFileFromSdcard(String filename) {
+    public static String externalText(String filename) {
         ByteArrayOutputStream outputStream = null;
         FileInputStream fis = null;
         try {
@@ -114,7 +139,7 @@ public class FileUtil {
         return new String(outputStream.toByteArray());
     }
 
-    public static Bitmap loadBitmapFromSdcard(String fileName) {
+    public static Bitmap externalBitmap(String fileName) {
         Bitmap bitmap = null;
         InputStream is = null;
 

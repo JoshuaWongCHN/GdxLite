@@ -16,12 +16,13 @@
 
 package com.joshua.gdx.gdxlite.graphics;
 
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.opengl.GLES20;
+import android.opengl.GLUtils;
 
 import com.joshua.gdx.gdxlite.graphics.glutils.GLTool;
-import com.joshua.gdx.gdxlite.utils.FileUtil;
+
+import java.text.Format;
 
 /**
  * A Texture wraps a standard OpenGL ES texture.
@@ -34,7 +35,8 @@ import com.joshua.gdx.gdxlite.utils.FileUtil;
  * texture will be
  * bound to the currently active texture unit specified via {@link GLES20#glActiveTexture(int)}.
  * <p>
- * This is of
+ * You can draw {@link Bitmap}s to a texture at any time. The changes will be automatically uploaded to texture
+ * memory. This is of
  * course not extremely fast so use it with care. It also only works with unmanaged textures.
  * <p>
  * A Texture must be disposed when it is no longer used
@@ -99,7 +101,6 @@ public class Texture extends GLTexture {
         public int getGLEnum() {
             return glEnum;
         }
-
     }
 
     public enum TextureWrap {
@@ -114,68 +115,90 @@ public class Texture extends GLTexture {
         public int getGLEnum() {
             return glEnum;
         }
-
     }
 
-    private Bitmap mBitmap;
+    TextureData data;
 
-    public Texture() {
-        this(GLES20.GL_TEXTURE_2D, GLTool.glGenTexture(), null);
+    public Texture(String filename) {
+        this(filename, true, false);
     }
 
-    public Texture(Context context, String internalPath) {
-        super(GLES20.GL_TEXTURE_2D, GLTool.glGenTexture());
-        Bitmap bitmap = FileUtil.loadBitmapFromAssets(context, internalPath);
-        load(bitmap);
-        bitmap.recycle();
+    public Texture(String filename, boolean useMipMaps) {
+        this(filename, true, useMipMaps);
     }
 
-    public Texture(String path) {
-        super(GLES20.GL_TEXTURE_2D, GLTool.glGenTexture());
-        Bitmap bitmap = FileUtil.loadBitmapFromSdcard(path);
-        load(bitmap);
-        if (bitmap != null) {
-            bitmap.recycle();
-        }
+    public Texture(String filename, boolean internal, boolean useMipMaps) {
+        this(TextureData.Factory.loadFromFile(filename, internal, useMipMaps));
     }
 
     public Texture(Bitmap bitmap) {
-        this(GLES20.GL_TEXTURE_2D, GLTool.glGenTexture(), bitmap);
+        this(new BitmapTextureData(bitmap, false, false));
     }
 
-    private Texture(int glTarget, int glHandle, Bitmap bitmap) {
+    public Texture(Bitmap bitmap, boolean useMipMaps) {
+        this(new BitmapTextureData(bitmap, useMipMaps, false));
+    }
+
+    public Texture(Bitmap bitmap, Format format, boolean useMipMaps) {
+        this(new BitmapTextureData(bitmap, useMipMaps, false));
+    }
+
+    public Texture(TextureData data) {
+        this(GLES20.GL_TEXTURE_2D, GLTool.glGenTexture(), data);
+    }
+
+    protected Texture(int glTarget, int glHandle, TextureData data) {
         super(glTarget, glHandle);
-        load(bitmap);
+        load(data);
     }
 
-    private void load(Bitmap bitmap) {
-        if (bitmap == null || bitmap.isRecycled()) {
-            return;
-        }
-        this.mBitmap = bitmap;
+    public void load(TextureData data) {
+        this.data = data;
+
+        if (!data.isPrepared()) data.prepare();
 
         bind();
-        uploadImageData(GLES20.GL_TEXTURE_2D, bitmap);
+        uploadImageData(GLES20.GL_TEXTURE_2D, data);
 
         unsafeSetFilter(minFilter, magFilter, true);
         unsafeSetWrap(uWrap, vWrap, true);
         GLES20.glBindTexture(glTarget, 0);
     }
 
+    /**
+     * Used internally to reload after context loss. Creates a new GL handle then calls {@link #load(TextureData)}.
+     * Use this only
+     * if you know what you do!
+     */
     @Override
     protected void reload() {
         glHandle = GLTool.glGenTexture();
-        load(mBitmap);
+        load(data);
+    }
+
+    /**
+     * Draws the given {@link Bitmap} to the texture at position x, y. No clipping is performed so you have to make
+     * sure that you
+     * draw only inside the texture region. Note that this will only draw to mipmap level 0!
+     *
+     * @param bitmap The Bitmap
+     * @param x      The x coordinate in pixels
+     * @param y      The y coordinate in pixels
+     */
+    public void draw(Bitmap bitmap, int x, int y) {
+        bind();
+
+        GLUtils.texSubImage2D(glTarget, 0, x, y, bitmap);
     }
 
     @Override
     public int getWidth() {
-        return mBitmap.getWidth();
+        return data.getWidth();
     }
 
     @Override
     public int getHeight() {
-        return mBitmap.getHeight();
+        return data.getHeight();
     }
 
     @Override
@@ -183,8 +206,52 @@ public class Texture extends GLTexture {
         return 0;
     }
 
+    public TextureData getTextureData() {
+        return data;
+    }
+
+    /**
+     * Disposes all resources associated with the texture
+     */
     public void dispose() {
+        // this is a hack. reason: we have to set the glHandle to 0 for textures that are
+        // reloaded through the asset manager as we first remove (and thus dispose) the texture
+        // and then reload it. the glHandle is set to 0 in invalidateAllTextures prior to
+        // removal from the asset manager.
         if (glHandle == 0) return;
         delete();
+    }
+
+    public String toString() {
+        if (data instanceof FileTextureData) return data.toString();
+        return super.toString();
+    }
+
+    public static int BitmapToGLFormat(Bitmap.Config config) {
+        switch (config) {
+            case ALPHA_8:
+                return GLES20.GL_ALPHA;
+            case RGB_565:
+                return GLES20.GL_RGB;
+            case ARGB_8888:
+            case ARGB_4444:
+                return GLES20.GL_RGBA;
+            default:
+                throw new RuntimeException("unknown format: " + config);
+        }
+    }
+
+    public static int BitmapToGLType(Bitmap.Config config) {
+        switch (config) {
+            case ALPHA_8:
+            case ARGB_8888:
+                return GLES20.GL_UNSIGNED_BYTE;
+            case RGB_565:
+                return GLES20.GL_UNSIGNED_SHORT_5_6_5;
+            case ARGB_4444:
+                return GLES20.GL_UNSIGNED_SHORT_4_4_4_4;
+            default:
+                throw new RuntimeException("unknown format: " + config);
+        }
     }
 }

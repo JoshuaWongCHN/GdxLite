@@ -16,9 +16,10 @@
 
 package com.joshua.gdx.gdxlite.graphics.glutils;
 
-import android.graphics.Bitmap;
 import android.opengl.GLES20;
 
+import com.joshua.gdx.gdxlite.graphics.Format;
+import com.joshua.gdx.gdxlite.graphics.GLOnlyTextureData;
 import com.joshua.gdx.gdxlite.graphics.Texture;
 import com.joshua.gdx.gdxlite.graphics.Texture.TextureFilter;
 
@@ -51,21 +52,21 @@ public class FrameBuffer extends GLFrameBuffer<Texture> {
      *
      * @param bufferBuilder
      **/
-    protected FrameBuffer(GLFrameBufferBuilder<? extends GLFrameBuffer<Texture>> bufferBuilder) {
+    public FrameBuffer(GLFrameBufferBuilder<? extends GLFrameBuffer<Texture>> bufferBuilder) {
         super(bufferBuilder);
     }
 
     /**
      * Creates a new FrameBuffer having the given dimensions and potentially a depth buffer attached.
      */
-    public FrameBuffer(Bitmap.Config config, int width, int height, boolean hasDepth) {
-        this(config, width, height, hasDepth, false);
+    public FrameBuffer(Format format, int width, int height, boolean hasDepth) {
+        this(format, width, height, hasDepth, false);
     }
 
     /**
      * Creates a new FrameBuffer having the given dimensions and potentially a depth and a stencil buffer attached.
      *
-     * @param config   the format of the color buffer; according to the OpenGL ES 2.0 spec, only RGB565, RGBA4444 and
+     * @param format   the format of the color buffer; according to the OpenGL ES 2.0 spec, only RGB565, RGBA4444 and
      *                    RGB5_A1 are
      *                 color-renderable
      * @param width    the width of the framebuffer in pixels
@@ -73,10 +74,12 @@ public class FrameBuffer extends GLFrameBuffer<Texture> {
      * @param hasDepth whether to attach a depth buffer
      * @throws RuntimeException in case the FrameBuffer could not be created
      */
-    public FrameBuffer(Bitmap.Config config, int width, int height, boolean hasDepth, boolean hasStencil) {
+    public FrameBuffer(Format format, int width, int height, boolean hasDepth, boolean hasStencil) {
         FrameBufferBuilder frameBufferBuilder = new FrameBufferBuilder(width, height);
-        frameBufferBuilder.addBasicColorTextureAttachment(config);
-        if (hasDepth) frameBufferBuilder.addBasicDepthRenderBuffer();
+        frameBufferBuilder.addBasicColorTextureAttachment(format);
+        if (hasDepth){
+            frameBufferBuilder.addBasicDepthRenderBuffer();
+        }
         if (hasStencil) frameBufferBuilder.addBasicStencilRenderBuffer();
         this.bufferBuilder = frameBufferBuilder;
 
@@ -85,7 +88,8 @@ public class FrameBuffer extends GLFrameBuffer<Texture> {
 
     @Override
     protected Texture createTexture(FrameBufferTextureAttachmentSpec attachmentSpec) {
-        Texture result = new Texture();
+        GLOnlyTextureData data = new GLOnlyTextureData(bufferBuilder.width, bufferBuilder.height, 0, attachmentSpec.internalFormat, attachmentSpec.format, attachmentSpec.type);
+        Texture result = new Texture(data);
         result.setFilter(TextureFilter.Linear, TextureFilter.Linear);
         result.setWrap(TextureWrap.ClampToEdge, TextureWrap.ClampToEdge);
         return result;
