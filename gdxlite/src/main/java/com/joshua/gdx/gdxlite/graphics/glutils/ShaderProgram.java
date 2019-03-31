@@ -18,6 +18,7 @@ package com.joshua.gdx.gdxlite.graphics.glutils;
 
 import android.content.Context;
 import android.opengl.GLES20;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.joshua.gdx.gdxlite.graphics.Color;
@@ -32,6 +33,7 @@ import com.joshua.gdx.gdxlite.utils.FileUtil;
 import com.joshua.gdx.gdxlite.utils.GLConstants;
 import com.joshua.gdx.gdxlite.utils.ObjectIntMap;
 
+import java.io.File;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -207,19 +209,18 @@ public class ShaderProgram implements Disposable {
      **/
     private int refCount = 0;
 
-    public ShaderProgram(Context context, String vertex, String fragment) {
-        this(FileUtil.internalText(vertex), FileUtil.internalText(fragment));
-    }
-
     /**
      * Constructs a new ShaderProgram and immediately compiles it.
      *
-     * @param vertexShader   the vertex shader
-     * @param fragmentShader the fragment shader
+     * @param vertexFilePath   the vertex shader
+     * @param fragmentFilePath the fragment shader
      */
-    public ShaderProgram(String vertexShader, String fragmentShader) {
-        if (vertexShader == null) throw new IllegalArgumentException("vertex shader must not be null");
-        if (fragmentShader == null) throw new IllegalArgumentException("fragment shader must not be null");
+    public ShaderProgram(String vertexFilePath, String fragmentFilePath) {
+        String vertexShader = FileUtil.internalText(vertexFilePath);
+        String fragmentShader = FileUtil.internalText(fragmentFilePath);
+
+        if (TextUtils.isEmpty(vertexShader)) throw new IllegalArgumentException("vertex shader must not be null");
+        if (TextUtils.isEmpty(fragmentShader)) throw new IllegalArgumentException("fragment shader must not be null");
 
         if (prependVertexCode != null && prependVertexCode.length() > 0)
             vertexShader = prependVertexCode + vertexShader;
